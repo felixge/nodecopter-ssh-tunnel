@@ -2,6 +2,7 @@
 var net = require('net');
 var dgram = require('dgram');
 var FrameParser = require('./lib/frameParser');
+var FrameGenerator = require('./lib/frameGenerator');
 
 process.nextTick(function main() {
   var server = new UdpTcpProxyServer({
@@ -29,6 +30,7 @@ UdpTcpProxyServer.prototype.createTcpServer = function() {
     var client = new TcpClient({
       id: self.clientCounter++,
       socket: socket,
+      droneIp: self.droneIp,
     });
 
     client.init();
@@ -45,7 +47,9 @@ UdpTcpProxyServer.prototype.createTcpServer = function() {
 function TcpClient(options) {
   this.id = options.id;
   this.socket = options.socket;
+  this.droneIp = options.droneIp;
   this.frameParser = new FrameParser();
+  this.frameGenerator = new FrameGenerator();
   this.udpSockets = {};
   this.bytesReceived = 0;
   this.bytesSent = 0;
@@ -55,6 +59,7 @@ function TcpClient(options) {
 TcpClient.prototype.init = function() {
   this.reportTimer = setInterval(this.report.bind(this), 2000);
   this.frameParser.on('data', this.proxyTcpToUdp.bind(this));
+  this.frameGenerator.pipe(this.socket);
   this.socket
     .on('data', this.handleData.bind(this))
     .on('end', this.handleDisconnect.bind(this));
@@ -63,7 +68,6 @@ TcpClient.prototype.init = function() {
 };
 
 TcpClient.prototype.handleData = function(buffer) {
-  this.bytesReceived += buffer.length;
   this.frameParser.write(buffer);
 };
 
@@ -77,6 +81,8 @@ TcpClient.prototype.report = function() {
 };
 
 TcpClient.prototype.proxyTcpToUdp = function(data) {
+  this.bytesReceived += data.message.length;
+
   var udpSocket = this.udpSockets[data.port];
 
   if (!udpSocket) {
@@ -88,8 +94,9 @@ TcpClient.prototype.proxyTcpToUdp = function(data) {
   udpSocket.send(data.message, 0, data.message.length, data.port, this.droneIp);
 };
 
-TcpClient.prototype.proxyUdpToTcp = function(port, buffer) {
-  console.log('received', buffer);
+TcpClient.prototype.proxyUdpToTcp = function(port, message) {
+  this.bytesSent += message.length;
+  this.frameGenerator.write(message, port);
 };
 
 TcpClient.prototype.destroy = function() {
