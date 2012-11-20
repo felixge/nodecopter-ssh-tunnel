@@ -7,7 +7,7 @@ trap "kill 0" SIGINT SIGTERM EXIT
 # drone config
 export DRONE_IP="192.168.1.1"
 export DRONE_TELNET_PORT="23"
-#export DRONE_NAVDATA_PORT="5554"
+export DRONE_NAVDATA_PORT="5554"
 #export drone_at_port="5556"
 
 # client config
