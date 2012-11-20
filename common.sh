@@ -18,7 +18,7 @@ export CLIENT_UDP_TUNNEL_PORT="8024"
 # server config
 export SERVER_LOCALHOST="127.0.0.1"
 export SERVER_UDP_TUNNEL_PORT="${CLIENT_UDP_TUNNEL_PORT}"
-#export server_tcp_port_offset="2000"
+export server_tcp_port_offset="2000"
 #export server_tcp_navdata_port="$(($drone_navdata_port+$server_tcp_port_offset))"
 
 

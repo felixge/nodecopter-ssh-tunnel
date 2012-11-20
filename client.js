@@ -3,11 +3,11 @@ var dgram = require('dgram');
 var net = require('net');
 var tcpPort = parseInt(process.env.CLIENT_UDP_TUNNEL_PORT, 10);
 
-console.log('--> Creating tcp->udp tunnel on port: ' + tcpPort + '...');
+console.log('--> Creating tcp->udp proxy on port: ' + tcpPort + '...');
 var tcpSocket = net.createConnection(tcpPort)
 tcpSocket
   .on('connect', function() {
-    console.log('--> Established udp->tcp tunnel on tcp port: ' + tcpPort);
+    console.log('--> Established udp->tcp proxy on tcp port: ' + tcpPort);
   });
 
 return;
