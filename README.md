@@ -5,7 +5,8 @@ a Parrot AR Drone 2.0 via ssh tunneling through the internet.
 
 ## Regular SSH Tunnel
 
-Regular ssh tunneling is not implemented, but I'd be happy to accept a patch.
+Regular ssh tunneling is not implemented, but I'd be happy to accept a patch,
+it should be pretty simply.
 
 ## Reverse SSH Tunnel
 
@@ -28,3 +29,11 @@ On the other machine (the server):
 ```bash
 $ ./reverse/server.sh <ssh_user@client_ip>
 ```
+
+Now configure your ar drone library to use `127.0.0.1` as the drone ip on
+the client machine.
+
+That's it!
+
+(This whole things is a huge hack, so you're responsible for any collateral
+damage you may cause with it.)
