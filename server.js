@@ -83,20 +83,20 @@ TcpClient.prototype.report = function() {
 TcpClient.prototype.proxyTcpToUdp = function(data) {
   this.bytesReceived += data.message.length;
 
-  var udpSocket = this.udpSockets[data.port];
+  var udpSocket = this.udpSockets[data.srcPort];
 
   if (!udpSocket) {
-    udpSocket = this.udpSockets[data.port] = dgram.createSocket('udp4');
-    udpSocket.on('message', this.proxyUdpToTcp.bind(this, data.port));
+    udpSocket = this.udpSockets[data.srcPort] = dgram.createSocket('udp4');
+    udpSocket.on('message', this.proxyUdpToTcp.bind(this, data.srcPort, data.dstPort));
     udpSocket.bind();
   }
 
-  udpSocket.send(data.message, 0, data.message.length, data.port, this.droneIp);
+  udpSocket.send(data.message, 0, data.message.length, data.srcPort, this.droneIp);
 };
 
-TcpClient.prototype.proxyUdpToTcp = function(port, message) {
+TcpClient.prototype.proxyUdpToTcp = function(srcPort, dstPort, message) {
   this.bytesSent += message.length;
-  this.frameGenerator.write(message, port);
+  this.frameGenerator.write(message, srcPort, dstPort);
 };
 
 TcpClient.prototype.destroy = function() {

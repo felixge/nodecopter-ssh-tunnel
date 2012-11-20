@@ -2,6 +2,7 @@
 var dgram = require('dgram');
 var net = require('net');
 var FrameGenerator = require('./lib/frameGenerator');
+var FrameParser = require('./lib/frameParser');
 
 process.nextTick(function main() {
   var proxy = new UdpToTcpProxy({
@@ -21,10 +22,12 @@ function UdpToTcpProxy(options) {
   this.tcpSocket = null;
   this.tcpPort = options.tcpPort;
   this.udpPorts = options.udpPorts;
+  this.frameParser = new FrameParser();
 }
 
 UdpToTcpProxy.prototype.start = function() {
   this.setupTcpProxyConnection();
+  this.frameParser.on('data', this.proxyTcpToUdp.bind(this));
 };
 
 UdpToTcpProxy.prototype.setupTcpProxyConnection = function() {
@@ -34,11 +37,18 @@ UdpToTcpProxy.prototype.setupTcpProxyConnection = function() {
 
   this.tcpSocket = net.createConnection(this.tcpPort)
   this.tcpSocket
+    .on('data', function(buffer) {
+      self.frameParser.write(buffer);
+    })
     .on('connect', function() {
       console.log('--> Established tcp<->udp proxy connection');
 
       self.setupUdpServers();
     });
+};
+
+UdpToTcpProxy.prototype.proxyTcpToUdp = function(data) {
+  console.log(data);
 };
 
 UdpToTcpProxy.prototype.setupUdpServers = function() {
@@ -51,8 +61,8 @@ UdpToTcpProxy.prototype.setupUdpServers = function() {
     var server = dgram.createSocket('udp4');
 
     server
-      .on('message', function(message) {
-        frameGenerator.write(message, udpPort);
+      .on('message', function(message, rinfo) {
+        frameGenerator.write(message, udpPort, rinfo.port);
       })
       .on('listening', function() {
         console.log('--> Listening on udp port: ' + udpPort);
