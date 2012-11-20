@@ -23,6 +23,7 @@ function UdpToTcpProxy(options) {
   this.tcpPort = options.tcpPort;
   this.udpPorts = options.udpPorts;
   this.frameParser = new FrameParser();
+  this.udpSockets = {};
 }
 
 UdpToTcpProxy.prototype.start = function() {
@@ -48,7 +49,13 @@ UdpToTcpProxy.prototype.setupTcpProxyConnection = function() {
 };
 
 UdpToTcpProxy.prototype.proxyTcpToUdp = function(data) {
-  console.log(data);
+  this.udpSockets[data.srcPort].send(
+    data.message,
+    0,
+    data.message.length,
+    data.dstPort,
+    '127.0.0.1'
+  );
 };
 
 UdpToTcpProxy.prototype.setupUdpServers = function() {
@@ -58,7 +65,7 @@ UdpToTcpProxy.prototype.setupUdpServers = function() {
   frameGenerator.pipe(this.tcpSocket);
 
   this.udpPorts.forEach(function(udpPort) {
-    var server = dgram.createSocket('udp4');
+    var server = self.udpSockets[udpPort] = dgram.createSocket('udp4');
 
     server
       .on('message', function(message, rinfo) {
