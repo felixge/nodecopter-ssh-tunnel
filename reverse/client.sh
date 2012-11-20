@@ -1,5 +1,4 @@
 #!/bin/bash
-set -ue # exit on error or unbound variable
 source "../config.sh"
 
 echo "--> Creating ${client_navdata_fifo} ..."
