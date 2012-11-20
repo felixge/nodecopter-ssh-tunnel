@@ -6,11 +6,15 @@ var clientIds = 0;
 var server = net.createServer(function(socket) {
   var clientId = clientIds++;
 
-  console.log('--> New client: ' + clientId);
+  console.log('--> Connected client #%s', clientId);
 
-  socket.on('end', function() {
-    console.log('--> Disconnected client: ' + clientId);
-  });
+  socket
+    .on('data', function(buffer) {
+      console.log('--> Client #%s data: %s', clientId, buffer.toString('hex'));
+    })
+    .on('end', function() {
+      console.log('--> Disconnected client #%s', clientId);
+    });
 
 });
 

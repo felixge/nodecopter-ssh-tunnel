@@ -4,6 +4,8 @@ source "common.sh"
 
 client_ssh="${1}"
 
+./server.js &
+
 echo "--> Setting up reverse ssh tunnel to: ${client_ssh} ..."
 # `-v`: Verbose to see when the tunnel has been established
 # `-N`: Do not execute a remote command
