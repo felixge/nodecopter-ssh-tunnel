@@ -1,51 +1,62 @@
 #!/usr/bin/env node
 var dgram = require('dgram');
 var net = require('net');
-var tcpPort = parseInt(process.env.CLIENT_UDP_TUNNEL_PORT, 10);
 
-console.log('--> Creating tcp->udp proxy on port: ' + tcpPort + '...');
-var tcpSocket = net.createConnection(tcpPort)
-tcpSocket
-  .on('connect', function() {
-    console.log('--> Established udp->tcp proxy on tcp port: ' + tcpPort);
+process.nextTick(function main() {
+  var proxy = new UdpToTcpProxy({
+    tcpPort: parseInt(process.env.CLIENT_UDP_TUNNEL_PORT, 10),
+    udpPorts: process.env.CLIENT_UDP_PORTS
+      .split(',')
+      .map(function(udpPort) {
+        return parseInt(udpPort, 10);
+      })
+  ,
   });
 
-return;
+  proxy.start();
+});
 
-process.env.CLIENT_UDP_PORTS
-  .split(',')
-  .map(function(udpPort) {
-    return parseInt(udpPort, 10);
-  })
-  .forEach(function(udpPort) {
+function UdpToTcpProxy(options) {
+  this.tcpSocket = null;
+  this.tcpPort = options.tcpPort;
+  this.udpPorts = options.udpPorts;
+}
+
+UdpToTcpProxy.prototype.start = function() {
+  this.setupTcpProxyConnection();
+};
+
+UdpToTcpProxy.prototype.setupTcpProxyConnection = function() {
+  var self = this;
+
+  console.log('--> Connecting to tcp<->udp proxy on tcp port: %s ...', this.tcpPort);
+
+  this.tcpSocket = net.createConnection(this.tcpPort)
+  this.tcpSocket
+    .on('connect', function() {
+      console.log('--> Established tcp<->udp proxy connection');
+
+      self.setupUdpServers();
+    });
+};
+
+UdpToTcpProxy.prototype.setupUdpServers = function() {
+  var self = this;
+  this.udpPorts.forEach(function(udpPort) {
     var server = dgram.createSocket('udp4');
 
     server
-      .on('message', function(buffer) {
-        console.log(buffer);
+      .on('message', function(message) {
+        var header = new Buffer(4);
+        header.writeUInt32BE(message.length, 0);
+        var buffer = Buffer.concat([header, message]);
+
+        self.tcpSocket.write(buffer);
       })
       .on('listening', function() {
-        console.log('--> Forwarding messages from udp port: ' + udpPort + ' to tcp port: ' + tcpPort);
+        console.log('--> Listening on udp port: ' + udpPort);
       });
 
     server.bind(udpPort);
   });
-
-
-return;
-
-
-
-
-
-server.on('message', function (msg, rinfo) {
-  console.log('server got: ' + msg + ' from ' +
-    rinfo.address + ':' + rinfo.port);
-});
-
-server.on('listening', function () {
-  var address = server.address();
-  console.log('server listening ' +
-      address.address + ':' + address.port);
-});
-
+};
