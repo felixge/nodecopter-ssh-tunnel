@@ -4,11 +4,11 @@ source "common.sh"
 
 client_ssh="${1}"
 
-echo "--> Setting server tcp -> drone udp routing via fifo: ${server_navdata_fifo} ..."
+echo "--> Setting server tcp -> drone udp routing via: ${server_navdata_fifo} ..."
 rm -rf "${server_navdata_fifo}"
 mkfifo "${server_navdata_fifo}"
-nc -l ${server_tcp_navdata_port} < "${server_navdata_fifo}" \
-  | nc -u ${drone_ip} ${drone_navdata_port} > "${server_navdata_fifo}" &
+nc -l "${server_localhost}" "${server_tcp_navdata_port}" < "${server_navdata_fifo}" \
+  | nc -u "${drone_ip}" "${drone_navdata_port}" > "${server_navdata_fifo}" &
 
 
 echo "--> Setting up reverse ssh tunnel to: ${client_ssh} ..."

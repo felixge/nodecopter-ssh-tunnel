@@ -14,12 +14,13 @@ export drone_navdata_port="5554"
 export drone_at_port="5556"
 
 # server config
-export server_tcp_port_offset="2000"
 export server_localhost="127.0.0.1"
+export server_tcp_port_offset="2000"
 export server_navdata_fifo="./server_navdata.fifo"
 export server_tcp_navdata_port="$(($drone_navdata_port+$server_tcp_port_offset))"
 
 # client config
+export client_localhost="127.0.0.1"
 export client_tcp_port_offset="2000"
 export client_navdata_fifo="./client_navdata.fifo"
 export client_telnet_port="$(($drone_telnet_port+$client_tcp_port_offset))"
