@@ -2,11 +2,14 @@
 var net = require('net');
 var tcpPort = parseInt(process.env.CLIENT_UDP_TUNNEL_PORT, 10);
 
+var clientIds = 0;
 var server = net.createServer(function(socket) {
-  console.log('--> New client: ' + socket.remoteAddress);
+  var clientId = clientIds++;
+
+  console.log('--> New client: ' + clientId);
 
   socket.on('end', function() {
-    console.log('--> Disconnected client: ' + socket.remoteAddress);
+    console.log('--> Disconnected client: ' + clientId);
   });
 
 });
