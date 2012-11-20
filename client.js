@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var dgram = require('dgram');
 var net = require('net');
+var FrameGenerator = require('./lib/frameGenerator');
 
 process.nextTick(function main() {
   var proxy = new UdpToTcpProxy({
@@ -42,16 +43,16 @@ UdpToTcpProxy.prototype.setupTcpProxyConnection = function() {
 
 UdpToTcpProxy.prototype.setupUdpServers = function() {
   var self = this;
+
+  var frameGenerator = new FrameGenerator();
+  frameGenerator.pipe(this.tcpSocket);
+
   this.udpPorts.forEach(function(udpPort) {
     var server = dgram.createSocket('udp4');
 
     server
       .on('message', function(message) {
-        var header = new Buffer(4);
-        header.writeUInt32BE(message.length, 0);
-        var buffer = Buffer.concat([header, message]);
-
-        self.tcpSocket.write(buffer);
+        frameGenerator.write(message, udpPort);
       })
       .on('listening', function() {
         console.log('--> Listening on udp port: ' + udpPort);
